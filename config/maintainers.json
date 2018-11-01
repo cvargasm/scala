@@ -1,0 +1,33 @@
+{
+  "maintainers": [
+    {
+      "github_username": "ErikSchierboom",
+      "show_on_website": true,
+      "alumnus": false,
+      "name": "Erik Schierboom",
+      "bio": null,
+      "link_text": "My blog",
+      "link_url": "http://www.erikschierboom.com/",
+      "avatar_url": null
+    },
+    {
+      "github_username": "sgrif",
+      "alumnus": true
+    },
+    {
+      "github_username": "ricemery",
+      "show_on_website": true,
+      "alumnus": false,
+      "name": "Ric Emery",
+      "bio": null,
+      "link_text": null,
+      "link_url": null,
+      "avatar_url": null
+    },
+    {
+      "github_username": "abo64",
+      "alumnus": true
+    }
+  ],
+  "docs_url": "https://github.com/exercism/docs/blob/master/maintaining-a-track/maintainer-configuration.md"
+}

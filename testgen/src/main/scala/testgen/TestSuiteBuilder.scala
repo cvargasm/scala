@@ -10,6 +10,7 @@ object TestSuiteBuilder {
 
   type TestSuiteTemplate = Template1[TestSuiteData, Txt]
   type ToTestCaseData = String => LabeledTestItem => TestCaseData
+  type ToOptionTestCaseData = String => LabeledTestItem => Option[TestCaseData]
 
   private val DefaultTemplate: TestSuiteTemplate =
     txt.funSuiteTemplate.asInstanceOf[Template1[TestSuiteData, Txt]]
@@ -29,7 +30,25 @@ object TestSuiteBuilder {
     template.render(testSuiteData).toString
   }
 
+  def buildFromOption(file: File, toTestCaseData: ToOptionTestCaseData, imports: Seq[String] = Seq())(
+    implicit template: TestSuiteTemplate = DefaultTemplate): String =
+  {
+    val exercise @ Exercise(name, version, cases, comments) =
+      CanonicalDataParser.parse(file)
+    val tsName = testSuiteName(name)
+    val testCasesAllPending = cases.map(toTestCaseData(sutName(name))).flatten
+    val testCases =
+      testCasesAllPending updated(0, testCasesAllPending.head.copy(pending = false))
+    val testSuiteData =
+      TestSuiteData(tsName, version, imports, testCases)
+
+    template.render(testSuiteData).toString
+  }
+
   def withLabeledTest(f: String => LabeledTest => TestCaseData): ToTestCaseData =
+    sut => item => f(sut)(item.asInstanceOf[LabeledTest])
+
+  def withLabeledTestOpt(f: String => LabeledTest => Option[TestCaseData]): ToOptionTestCaseData =
     sut => item => f(sut)(item.asInstanceOf[LabeledTest])
 
   def fromLabeledTest(argNames: String*): ToTestCaseData =
@@ -70,7 +89,7 @@ object TestSuiteBuilder {
   }
 
   def sutName(exerciseName: String) =
-    (exerciseName split ("-") map (_.capitalize) mkString)
+    exerciseName split "-" map (_.capitalize) mkString
   def testSuiteName(exerciseName: String): String =
     sutName(exerciseName) + "Test"
 
@@ -86,10 +105,10 @@ object TestSuiteBuilder {
   private def toString(expected: CanonicalDataParser.Expected): String =
       expected.fold(error => s"Left(${toString(error)})", toString)
 
-  def toString(any: Any): String = {
-    def quote(str: String): String =
-      if ("\"\n" exists (str.contains(_:Char))) "\"\"\"" else "\""
+  def quote(str: String): String =
+    if ("\"\n" exists (str.contains(_:Char))) "\"\"\"" else "\""
 
+  def toString(any: Any): String = {
     any match {
       case list: List[_] =>
         val vals = list.map(s => toString(s)).mkString(", ")
@@ -97,6 +116,8 @@ object TestSuiteBuilder {
       case str: String =>
         val quot = quote(str)
         s"$quot$str$quot"
+      case lstr: Long =>
+        lstr.toString + "l"
       case _ => any.toString
     }
   }
